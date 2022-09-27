@@ -4,7 +4,7 @@ This library was created in order to have a simple and reusable authentication s
 
 ## Install & Setup
 
-The project uses 17 different dependencies. It also uses the redis 3.1.2 ver which doesn't support async/await. The [Windows](https://github.com/microsoftarchive/redis/releases/tag/win-3.0.504) version can be downloaded from here.
+The project uses 17 different dependencies. It also uses the redis 3.1.2 ver which doesn't support async/await. The windows version can be downloaded from [here](https://github.com/microsoftarchive/redis/releases/tag/win-3.0.504).
 
 To use the library add it to your project:
 

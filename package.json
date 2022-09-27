@@ -1,6 +1,6 @@
 {
     "name": "x-auth-service",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Simple Auth library for REST APIs using expressJS",
     "main": "dist/index.js",
     "scripts": {
