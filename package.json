@@ -1,6 +1,6 @@
 {
     "name": "x-auth-service",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Simple Auth library for REST APIs using expressJS",
     "main": "dist/index.js",
     "scripts": {
@@ -17,6 +17,14 @@
         "type": "git",
         "url": "https://github.com/FrancoisAouad/X-Auth.git"
     },
+    "keywords": [
+        "nodejs",
+        "typescript",
+        "mongodb",
+        "express",
+        "redis",
+        "jwt"
+    ],
     "dependencies": {
         "bcryptjs": "^2.4.3",
         "compression": "^1.7.4",
@@ -44,6 +52,7 @@
         "@types/http-errors": "^1.8.2",
         "@types/jsonwebtoken": "^8.5.9",
         "@types/morgan": "^1.9.3",
+        "@types/node": "^18.7.23",
         "@types/nodemailer": "^6.4.6",
         "colors": "^1.4.0",
         "morgan": "^1.10.0",
