@@ -1,21 +1,9 @@
-import mongoose, { Schema } from 'mongoose';
-//INTERFACE
-export interface UserInterface {
-    name: string;
-    email: string;
-    password: string;
-    emailToken: string;
-    isVerified: boolean;
-    isAdmin: boolean;
-    reports: number;
-    isBlocked: boolean;
-    isDeleted: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-}
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UserSchema = void 0;
+const mongoose_1 = require("mongoose");
 //SCHEMA
-const UserSchema: Schema = new Schema({
+exports.UserSchema = new mongoose_1.Schema({
     fullname: {
         type: String,
         required: true,
@@ -34,7 +22,6 @@ const UserSchema: Schema = new Schema({
         type: String,
         required: true,
     },
-
     emailToken: {
         type: String,
     },
@@ -67,5 +54,3 @@ const UserSchema: Schema = new Schema({
         default: Date.now(),
     },
 });
-
-export default mongoose.model<UserInterface>('User', UserSchema);

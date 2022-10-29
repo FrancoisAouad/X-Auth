@@ -1,15 +1,16 @@
-import userModel from './auth.model';
 import error from 'http-errors';
-import client from '../lib/db/redisCon';
-import globalService from '../utils/globalService';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto-js';
-import sendMail from '../utils/mailer';
-import configJWT from '../lib/jwt/configJWT';
-import verifyJWT from '../lib/jwt/verifyJWT';
-const GlobalService = new globalService();
+import { getUser, sendMail } from '../utils/globalService';
+import { Body, RefreshToken } from '../types/types';
+import {
+    setAccessToken,
+    setRefreshToken,
+    verifyRefreshToken,
+    setResetPasswordToken,
+} from './jwt.services';
 
-export const signup = async (body: any, header: any) => {
+export const signup = async (body: Body, header: any) => {
     const exists = await userModel.findOne({ email: body.email });
     if (exists)
         throw new error.Conflict(`${body.email} has already been registered.`);
@@ -27,16 +28,14 @@ export const signup = async (body: any, header: any) => {
         password: hashedPassword,
     });
     //create accesss and refresh tokens
-    const accessToken = configJWT.setAccessToken(addedUser._id.toString());
-    const refreshToken = await configJWT.setRefreshToken(
-        addedUser._id.toString()
-    );
+    const accessToken = setAccessToken(addedUser._id.toString());
+    const refreshToken = await setRefreshToken(addedUser._id.toString());
     //send registartion email
     sendMail({
         from: process.env.NODEMAILER_USER,
         to: body.email,
         subject: 'Email Verification',
-        html: `<h2> Welcome, ${body.name}!</h2>
+        html: `<h2> Welcome, ${body.fullname}!</h2>
           <br/>
               <p>Thank you for registering, you are almost done. Please read the below message to continue.</p>
               <br/>
@@ -47,7 +46,7 @@ export const signup = async (body: any, header: any) => {
     //return object containing both tokens
     return { accessToken, refreshToken };
 };
-export const login = async (body: any) => {
+export const login = async (body: Body) => {
     //check if user exists in db
     const user = await userModel.findOne({ email: body.email });
     if (!user) throw new error.NotFound('Incorrect email/pass');
@@ -56,29 +55,29 @@ export const login = async (body: any) => {
     //throw error if pass doesnt match
     if (isMatch === false) throw new error.Unauthorized('Incorrect email/pass');
     //set tokens to be sent to client side
-    const accessToken = configJWT.setAccessToken(user._id.toString());
-    const refreshToken = await configJWT.setRefreshToken(user._id.toString());
+    const accessToken = setAccessToken(user._id.toString());
+    const refreshToken = await setRefreshToken(user._id.toString());
 
     return { accessToken, refreshToken };
 };
-export const refreshToken = async (body: any) => {
+export const refreshToken = async (body: RefreshToken) => {
     if (!body) throw new error.BadRequest('Bad Request');
     //verify refresh token
-    const userId: any = await verifyJWT.verifyRefreshToken(body);
+    const userId: any = await verifyRefreshToken(body);
     //set new access token
-    const accessToken = configJWT.setAccessToken(userId);
+    const accessToken = setAccessToken(userId);
     //set new refresh token
-    const refToken = await configJWT.setRefreshToken(userId);
+    const refToken = await setRefreshToken(userId);
     //send tokens to client side
     return { accessToken: accessToken, refreshToken: refToken };
 };
-export const logout = async (body: any) => {
+export const logout = async (body: RefreshToken) => {
     //check refresh token
     const { refreshToken } = body;
     //return error if not found
     if (!refreshToken) throw new error.BadRequest('Bad Request');
     //verify the refresh token if found
-    const userId = await verifyJWT.verifyRefreshToken(refreshToken);
+    const userId = await verifyRefreshToken(refreshToken);
     //delete refresh token to logout
     client.DEL(userId, (err: any, val: any) => {
         if (err) throw new error.Unauthorized('Unauthorizeed');
@@ -87,13 +86,13 @@ export const logout = async (body: any) => {
 };
 export const forgotPassword = async (header: any) => {
     //get logged in user
-    const id = GlobalService.getUser(header.authorization);
+    const id = getUser(header.authorization);
     //check if user exists
     const user: any = await userModel.findOne({ _id: id });
     //return error if user not found
     if (!user) throw new error.Unauthorized('unauthorized');
     //create unique token valid for 10min to verify email
-    const passwordToken = await configJWT.setResetPasswordToken(user.id);
+    const passwordToken = await setResetPasswordToken(user.id);
 
     sendMail({
         from: process.env.NODEMAILER_USER,
@@ -109,11 +108,11 @@ export const forgotPassword = async (header: any) => {
     //send message that email was sent
     return user;
 };
-export const resetPassword = async (params: any, body: any, header: any) => {
+export const resetPassword = async (params: any, body: Body, header: any) => {
     const { token } = params;
     //validate new pass
     //get user id
-    const id = GlobalService.getUser(header);
+    const id = getUser(header);
     //check if user found
     const user = await userModel.findOne({ _id: id });
     if (!user) throw new error.NotFound('user not found..');
@@ -147,15 +146,4 @@ export const hashPassword = async (password: string) => {
     const hashedPassword = await bcrypt.hash(password, salt);
     //return the hashed password
     return hashedPassword;
-};
-export default {
-    login,
-    signup,
-    refreshToken,
-    logout,
-    forgotPassword,
-    resetPassword,
-    verifyEmail,
-    isValidPassword,
-    hashPassword,
 };
